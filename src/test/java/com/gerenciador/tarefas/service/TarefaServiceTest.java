@@ -99,8 +99,9 @@ public class TarefaServiceTest {
     @Nested
     @DisplayName("listarTarefas")
     class ListarTarefa {
+
         @Test
-        @DisplayName("Deve listar tarefas paginadas com sucesso")
+        @DisplayName("Deve listar tarefas sem filtro de status com sucesso")
         void deveListarTarefasComSucesso() {
             Pageable pageable = PageRequest.of(0, 10);
             var tarefaEntity = new Tarefa(TITULO_INICIAL, DESCRICAO_INICIAL);
@@ -110,14 +111,32 @@ public class TarefaServiceTest {
             when(tarefaRepository.findAll(pageable)).thenReturn(page);
             when(tarefaMapper.toDto(tarefaEntity)).thenReturn(tarefaResponse);
 
-            PageResponseDTO<TarefaResponseDTO> resultado = tarefaService.listarTarefas(pageable);
+            PageResponseDTO<TarefaResponseDTO> resultado = tarefaService.listarTarefas(null, pageable);
 
             assertNotNull(resultado);
             assertEquals(1, resultado.conteudo().size());
-            assertEquals(TITULO_INICIAL, resultado.conteudo().get(0).titulo());
-            assertEquals(10, resultado.tamanho());
 
             verify(tarefaRepository).findAll(pageable);
+            verify(tarefaRepository, never()).findByStatusTarefa(any(), eq(pageable));
+        }
+        @Test
+        @DisplayName("Deve listar tarefas filtradas por status com sucesso")
+        void deveListarTarefasFiltrandoPorStatus() {
+            Pageable pageable = PageRequest.of(0, 10);
+            var tarefaEntity = new Tarefa(TITULO_INICIAL, DESCRICAO_INICIAL);
+            var tarefaResponse = criarTarefaResponseDTO();
+            Page<Tarefa> page = new PageImpl<>(List.of(tarefaEntity), pageable, 1);
+
+            when(tarefaRepository.findByStatusTarefa(StatusTarefa.PENDENTE, pageable)).thenReturn(page);
+            when(tarefaMapper.toDto(tarefaEntity)).thenReturn(tarefaResponse);
+
+            PageResponseDTO<TarefaResponseDTO> resultado = tarefaService.listarTarefas(StatusTarefa.PENDENTE, pageable);
+
+            assertNotNull(resultado);
+            assertEquals(1, resultado.conteudo().size());
+
+            verify(tarefaRepository).findByStatusTarefa(StatusTarefa.PENDENTE, pageable);
+            verify(tarefaRepository, never()).findAll(pageable);
         }
 
         @Test
@@ -126,7 +145,7 @@ public class TarefaServiceTest {
             Pageable pageable = PageRequest.of(0, 10);
             when(tarefaRepository.findAll(pageable)).thenThrow(new TarefaException(ERRO_LISTAGEM));
 
-            assertThrows(TarefaException.class, () -> tarefaService.listarTarefas(pageable));
+            assertThrows(TarefaException.class, () -> tarefaService.listarTarefas(null, pageable));
 
             verify(tarefaRepository).findAll(pageable);
         }

@@ -1,5 +1,6 @@
 package com.gerenciador.tarefas.controller;
 
+import com.gerenciador.tarefas.domain.StatusTarefa;
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
 import com.gerenciador.tarefas.dtos.request.TarefaUpdateRequestDTO;
 import com.gerenciador.tarefas.dtos.response.PageResponseDTO;
@@ -31,9 +32,10 @@ public class TarefaController {
 
     @GetMapping
     public PageResponseDTO<TarefaResponseDTO> listarTarefas(
+            @RequestParam(required = false) StatusTarefa status,
             @PageableDefault(sort = "dataCriacao", direction = Sort.Direction.ASC)
             Pageable pageable) {
-        return tarefaService.listarTarefas(pageable);
+        return tarefaService.listarTarefas(status, pageable);
     }
 
     @GetMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.gerenciador.tarefas.service;
 
+import com.gerenciador.tarefas.domain.StatusTarefa;
 import com.gerenciador.tarefas.domain.Tarefa;
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
 import com.gerenciador.tarefas.dtos.request.TarefaUpdateRequestDTO;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,9 +38,15 @@ public class TarefaService {
         }
     }
 
-    public PageResponseDTO<TarefaResponseDTO> listarTarefas(Pageable pageable) {
+    public PageResponseDTO<TarefaResponseDTO> listarTarefas(StatusTarefa statusTarefa, Pageable pageable) {
         try {
-            Page<Tarefa> page = tarefaRepository.findAll(pageable);
+            Page<Tarefa> page;
+
+            if (statusTarefa != null) {
+                page = tarefaRepository.findByStatusTarefa(statusTarefa,pageable);
+            } else {
+                page = tarefaRepository.findAll(pageable);
+            }
 
             return new PageResponseDTO<>(
                     page.getContent().stream().map(tarefaMapper::toDto).toList(),
