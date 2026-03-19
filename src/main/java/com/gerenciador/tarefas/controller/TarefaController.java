@@ -34,4 +34,12 @@ public class TarefaController {
             Pageable pageable) {
         return tarefaService.listarTarefas(pageable);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TarefaResponseDTO> buscarTarefa(@PathVariable Long id){
+        TarefaResponseDTO responseDTO = tarefaService.buscarTarefa(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDTO);
+    }
 }
