@@ -68,6 +68,13 @@ public class TarefaService {
 
         return tarefaMapper.toDto(tarefa);
     }
+
+    @Transactional
+    public void deletarTarefa(Long id) {
+        buscarTarefaPorId(id);
+        tarefaRepository.deleteById(id);
+    }
+
     private Tarefa  buscarTarefaPorId(Long id) {
         return tarefaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada"));
     }
