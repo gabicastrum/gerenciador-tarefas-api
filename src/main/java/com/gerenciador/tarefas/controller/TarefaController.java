@@ -55,4 +55,10 @@ public class TarefaController {
                 .status(HttpStatus.OK)
                 .body(responseDTO);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarTarefa(@PathVariable Long id){
+        tarefaService.deletarTarefa(id);
+        return ResponseEntity.noContent().build();
+    }
 }
