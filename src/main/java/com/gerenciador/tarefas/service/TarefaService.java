@@ -2,6 +2,7 @@ package com.gerenciador.tarefas.service;
 
 import com.gerenciador.tarefas.domain.Tarefa;
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
+import com.gerenciador.tarefas.dtos.request.TarefaUpdateRequestDTO;
 import com.gerenciador.tarefas.dtos.response.PageResponseDTO;
 import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.exception.TarefaException;
@@ -55,6 +56,18 @@ public class TarefaService {
         return tarefaMapper.toDto(buscarTarefaPorId(id));
     }
 
+    @Transactional
+    public TarefaResponseDTO atualizarDadosTarefa(Long id, TarefaUpdateRequestDTO dto) {
+        Tarefa tarefa = buscarTarefaPorId(id);
+
+        tarefa.atualizarDados(
+                dto.titulo() != null ? dto.titulo() : tarefa.getTitulo(),
+                dto.descricao() != null ? dto.descricao() : tarefa.getDescricao(),
+                dto.statusTarefa() != null ? dto.statusTarefa() : tarefa.getStatusTarefa()
+        );
+
+        return tarefaMapper.toDto(tarefa);
+    }
     private Tarefa  buscarTarefaPorId(Long id) {
         return tarefaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada"));
     }
