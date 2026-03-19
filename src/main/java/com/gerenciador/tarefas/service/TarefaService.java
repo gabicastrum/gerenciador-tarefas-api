@@ -7,6 +7,7 @@ import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.exception.TarefaException;
 import com.gerenciador.tarefas.mapper.TarefaMapper;
 import com.gerenciador.tarefas.repository.TarefaRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -48,5 +49,13 @@ public class TarefaService {
         } catch (Exception e) {
             throw new TarefaException("Erro ao listar tarefas");
         }
+    }
+
+    public TarefaResponseDTO buscarTarefa(Long id) {
+        return tarefaMapper.toDto(buscarTarefaPorId(id));
+    }
+
+    private Tarefa  buscarTarefaPorId(Long id) {
+        return tarefaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada"));
     }
 }
