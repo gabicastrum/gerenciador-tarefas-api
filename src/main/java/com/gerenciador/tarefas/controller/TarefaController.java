@@ -1,6 +1,7 @@
 package com.gerenciador.tarefas.controller;
 
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
+import com.gerenciador.tarefas.dtos.request.TarefaUpdateRequestDTO;
 import com.gerenciador.tarefas.dtos.response.PageResponseDTO;
 import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.service.TarefaService;
@@ -38,6 +39,18 @@ public class TarefaController {
     @GetMapping("/{id}")
     public ResponseEntity<TarefaResponseDTO> buscarTarefa(@PathVariable Long id){
         TarefaResponseDTO responseDTO = tarefaService.buscarTarefa(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDTO);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<TarefaResponseDTO> atualizarTarefa(
+            @PathVariable Long id,
+            @RequestBody @Valid TarefaUpdateRequestDTO dto
+    ) {
+        TarefaResponseDTO responseDTO = tarefaService.atualizarDadosTarefa(id, dto);
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(responseDTO);
