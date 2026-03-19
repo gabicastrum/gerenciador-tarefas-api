@@ -1,6 +1,5 @@
 package com.gerenciador.tarefas.controller;
 
-import com.gerenciador.tarefas.domain.Tarefa;
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
 import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.service.TarefaService;
