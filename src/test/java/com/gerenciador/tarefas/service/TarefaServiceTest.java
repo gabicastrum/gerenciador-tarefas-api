@@ -204,6 +204,34 @@ public class TarefaServiceTest {
             assertNotNull(tarefaExistente.getDataConclusao());
         }
     }
+    @Nested
+    @DisplayName("deletarTarefa")
+    class DeletarTarefa {
+
+        @Test
+        @DisplayName("Deve deletar tarefa com sucesso")
+        void deveDeletarTarefaComSucesso() {
+            var tarefaEntity = new Tarefa(TITULO_INICIAL, DESCRICAO_INICIAL);
+
+            when(tarefaRepository.findById(ID_01)).thenReturn(Optional.of(tarefaEntity));
+
+            tarefaService.deletarTarefa(ID_01);
+
+            verify(tarefaRepository).deleteById(ID_01);
+        }
+
+        @Test
+        @DisplayName("Não deve deletar se a tarefa não for encontrada")
+        void naoDeveDeletarTarefaNaoForEncontrada() {
+            when(tarefaRepository.findById(ID_INEXISTENTE)).thenReturn(Optional.empty());
+
+            EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                    () -> tarefaService.deletarTarefa(ID_INEXISTENTE));
+
+            assertEquals(ERRO_TAREFA_NAO_ENCONTRADA, exception.getMessage());
+            verify(tarefaRepository, never()).deleteById(any());
+        }
+    }
     private TarefaResponseDTO criarTarefaResponseDTO() {
         return new TarefaResponseDTO(
                 ID_01,
