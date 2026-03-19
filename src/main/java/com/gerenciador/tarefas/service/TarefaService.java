@@ -2,11 +2,15 @@ package com.gerenciador.tarefas.service;
 
 import com.gerenciador.tarefas.domain.Tarefa;
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
+import com.gerenciador.tarefas.dtos.response.PageResponseDTO;
 import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
+import com.gerenciador.tarefas.exception.TarefaException;
 import com.gerenciador.tarefas.mapper.TarefaMapper;
 import com.gerenciador.tarefas.repository.TarefaRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,10 +22,31 @@ public class TarefaService {
 
     @Transactional
     public TarefaResponseDTO criarTarefa(TarefaRequestDTO dto) {
-        Tarefa tarefa = tarefaMapper.toEntity(dto);
+        try {
+            Tarefa tarefa = tarefaMapper.toEntity(dto);
 
-        Tarefa tarefaSalva = tarefaRepository.save(tarefa);
+            Tarefa tarefaSalva = tarefaRepository.save(tarefa);
 
-        return tarefaMapper.toDto(tarefaSalva);
+            return tarefaMapper.toDto(tarefaSalva);
+        } catch (Exception e) {
+            throw new TarefaException("Erro ao criar tarefa: " + e.getMessage());
+        }
+    }
+
+    public PageResponseDTO<TarefaResponseDTO> listarTarefas(Pageable pageable) {
+        try {
+            Page<Tarefa> page = tarefaRepository.findAll(pageable);
+
+            return new PageResponseDTO<>(
+                    page.getContent().stream().map(tarefaMapper::toDto).toList(),
+                    page.getNumber(),
+                    page.getSize(),
+                    page.getTotalElements(),
+                    page.getTotalPages()
+            );
+
+        } catch (Exception e) {
+            throw new TarefaException("Erro ao listar tarefas");
+        }
     }
 }
