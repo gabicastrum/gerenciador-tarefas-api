@@ -1,16 +1,17 @@
 package com.gerenciador.tarefas.controller;
 
 import com.gerenciador.tarefas.dtos.request.TarefaRequestDTO;
+import com.gerenciador.tarefas.dtos.response.PageResponseDTO;
 import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.service.TarefaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/tarefas")
@@ -25,5 +26,12 @@ public class TarefaController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(tarefaResponseDTO);
+    }
+
+    @GetMapping
+    public PageResponseDTO<TarefaResponseDTO> listarTarefas(
+            @PageableDefault(sort = "dataCriacao", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+        return tarefaService.listarTarefas(pageable);
     }
 }
