@@ -40,6 +40,7 @@ public class TarefaServiceTest {
         private static final String TITULO_ANTIGO = "Título Antigo";
         private static final String DESCRICAO_ANTIGA = "Descrição Antiga";
         private static final String TITULO_ATUALIZADO = "Título Atualizado";
+        private static final String DESCRICAO_ATUALIZADA = "Descrição Atualizada";
 
         private static final String ERRO_LISTAGEM = "Erro ao listar tarefas";
         private static final String ERRO_BANCO_SIMULADO = "Erro SQL";
@@ -203,6 +204,27 @@ public class TarefaServiceTest {
 
             assertEquals(TITULO_ATUALIZADO, resultado.titulo());
             assertEquals(DESCRICAO_ANTIGA, resultado.descricao());
+
+            verify(tarefaRepository).findById(ID_01);
+            verify(tarefaMapper).toDto(tarefaExistente);
+        }
+
+        @Test
+        @DisplayName("Deve atualizar apenas a descrição com sucesso")
+        void deveAtualizarApenasDescricaoComSucesso() {
+            var updateDTO = new TarefaUpdateRequestDTO(null, DESCRICAO_ATUALIZADA, null);
+            var tarefaExistente = new Tarefa(TITULO_ANTIGO, DESCRICAO_ANTIGA);
+            tarefaExistente.setId(ID_01);
+
+            var responseDTO = new TarefaResponseDTO(ID_01, TITULO_ANTIGO, DESCRICAO_ATUALIZADA, StatusTarefa.PENDENTE, LocalDateTime.now());
+
+            when(tarefaRepository.findById(ID_01)).thenReturn(Optional.of(tarefaExistente));
+            when(tarefaMapper.toDto(any(Tarefa.class))).thenReturn(responseDTO);
+
+            var resultado = tarefaService.atualizarDadosTarefa(ID_01, updateDTO);
+
+            assertEquals(TITULO_ANTIGO, resultado.titulo());
+            assertEquals(DESCRICAO_ATUALIZADA, resultado.descricao());
 
             verify(tarefaRepository).findById(ID_01);
             verify(tarefaMapper).toDto(tarefaExistente);
