@@ -9,14 +9,11 @@ import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.exception.TarefaException;
 import com.gerenciador.tarefas.mapper.TarefaMapper;
 import com.gerenciador.tarefas.repository.TarefaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,38 +24,22 @@ public class TarefaService {
 
     @Transactional
     public TarefaResponseDTO criarTarefa(TarefaRequestDTO dto) {
-        try {
-            Tarefa tarefa = tarefaMapper.toEntity(dto);
-
-            Tarefa tarefaSalva = tarefaRepository.save(tarefa);
-
-            return tarefaMapper.toDto(tarefaSalva);
-        } catch (Exception e) {
-            throw new TarefaException("Erro ao criar tarefa: " + e.getMessage());
-        }
+        Tarefa tarefa = tarefaMapper.toEntity(dto);
+        return tarefaMapper.toDto(tarefaRepository.save(tarefa));
     }
 
     public PageResponseDTO<TarefaResponseDTO> listarTarefas(StatusTarefa statusTarefa, Pageable pageable) {
-        try {
-            Page<Tarefa> page;
+        Page<Tarefa> page = statusTarefa != null
+                ? tarefaRepository.findByStatusTarefa(statusTarefa, pageable)
+                : tarefaRepository.findAll(pageable);
 
-            if (statusTarefa != null) {
-                page = tarefaRepository.findByStatusTarefa(statusTarefa,pageable);
-            } else {
-                page = tarefaRepository.findAll(pageable);
-            }
-
-            return new PageResponseDTO<>(
-                    page.getContent().stream().map(tarefaMapper::toDto).toList(),
-                    page.getNumber(),
-                    page.getSize(),
-                    page.getTotalElements(),
-                    page.getTotalPages()
-            );
-
-        } catch (Exception e) {
-            throw new TarefaException("Erro ao listar tarefas");
-        }
+        return new PageResponseDTO<>(
+                page.getContent().stream().map(tarefaMapper::toDto).toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
     }
 
     public TarefaResponseDTO buscarTarefa(Long id) {
@@ -84,7 +65,8 @@ public class TarefaService {
         tarefaRepository.deleteById(id);
     }
 
-    private Tarefa  buscarTarefaPorId(Long id) {
-        return tarefaRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada"));
+    private Tarefa buscarTarefaPorId(Long id) {
+        return tarefaRepository.findById(id)
+                .orElseThrow(() -> new TarefaException("Tarefa não encontrada"));
     }
 }

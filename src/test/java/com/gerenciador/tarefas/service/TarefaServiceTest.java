@@ -9,7 +9,6 @@ import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.exception.TarefaException;
 import com.gerenciador.tarefas.mapper.TarefaMapper;
 import com.gerenciador.tarefas.repository.TarefaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -80,21 +79,6 @@ public class TarefaServiceTest {
             verify(tarefaMapper).toEntity(requestDTO);
             verify(tarefaRepository).save(tarefaEntity);
             verify(tarefaMapper).toDto(tarefaEntity);
-        }
-
-        @Test
-        @DisplayName("Deve lançar exceção ao falhar ao salvar tarefa")
-        void deveLancarExcecaoAoSalvarTarefa() {
-            var requestDTO = new TarefaRequestDTO(TITULO_INICIAL, DESCRICAO_INICIAL);
-            var tarefaEntity = new Tarefa(TITULO_INICIAL, DESCRICAO_INICIAL);
-
-            when(tarefaMapper.toEntity(requestDTO)).thenReturn(tarefaEntity);
-            when(tarefaRepository.save(any(Tarefa.class))).thenThrow(new RuntimeException(ERRO_BANCO_SIMULADO));
-
-            assertThrows(TarefaException.class, () -> tarefaService.criarTarefa(requestDTO));
-
-            verify(tarefaRepository).save(tarefaEntity);
-            verify(tarefaMapper, never()).toDto(any());
         }
     }
     @Nested
@@ -177,7 +161,7 @@ public class TarefaServiceTest {
         void deveLancarExcecaoQuandoTarefaNaoEncontrada() {
             when(tarefaRepository.findById(ID_INEXISTENTE)).thenReturn(Optional.empty());
 
-            EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+            TarefaException exception = assertThrows(TarefaException.class,
                     () -> tarefaService.buscarTarefa(ID_INEXISTENTE));
 
             assertEquals(ERRO_TAREFA_NAO_ENCONTRADA, exception.getMessage());
@@ -266,7 +250,7 @@ public class TarefaServiceTest {
         void naoDeveDeletarTarefaNaoForEncontrada() {
             when(tarefaRepository.findById(ID_INEXISTENTE)).thenReturn(Optional.empty());
 
-            EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+            TarefaException exception = assertThrows(TarefaException.class,
                     () -> tarefaService.deletarTarefa(ID_INEXISTENTE));
 
             assertEquals(ERRO_TAREFA_NAO_ENCONTRADA, exception.getMessage());
