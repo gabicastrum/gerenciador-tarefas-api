@@ -6,6 +6,9 @@ import com.gerenciador.tarefas.dtos.request.TarefaUpdateRequestDTO;
 import com.gerenciador.tarefas.dtos.response.PageResponseDTO;
 import com.gerenciador.tarefas.dtos.response.TarefaResponseDTO;
 import com.gerenciador.tarefas.service.TarefaService;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -31,8 +34,16 @@ public class TarefaController {
     }
 
     @GetMapping
+    @Parameters({
+            @Parameter(name = "page", schema = @Schema(type = "integer", defaultValue = "0")),
+            @Parameter(name = "size", schema = @Schema(type = "integer", defaultValue = "10")),
+            @Parameter(name = "sort", schema = @Schema(type = "string", defaultValue = "dataCriacao,asc"), hidden = true)
+    })
     public PageResponseDTO<TarefaResponseDTO> listarTarefas(
+            @Parameter(description = "Filtrar por status (opcional)")
             @RequestParam(required = false) StatusTarefa status,
+
+            @Parameter(hidden = true)
             @PageableDefault(sort = "dataCriacao", direction = Sort.Direction.ASC)
             Pageable pageable) {
         return tarefaService.listarTarefas(status, pageable);
