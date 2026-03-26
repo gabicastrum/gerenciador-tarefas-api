@@ -42,7 +42,6 @@ public class TarefaServiceTest {
         private static final String DESCRICAO_ATUALIZADA = "Descrição Atualizada";
 
         private static final String ERRO_LISTAGEM = "Erro ao listar tarefas";
-        private static final String ERRO_BANCO_SIMULADO = "Erro SQL";
         private static final String ERRO_TAREFA_NAO_ENCONTRADA = "Tarefa não encontrada";
 
 
@@ -79,6 +78,20 @@ public class TarefaServiceTest {
             verify(tarefaMapper).toEntity(requestDTO);
             verify(tarefaRepository).save(tarefaEntity);
             verify(tarefaMapper).toDto(tarefaEntity);
+        }
+
+        @Test
+        @DisplayName("Deve lançar exceção quando o repositório falhar ao salvar")
+        void deveLancarExcecaoQuandoRepositorioFalhar() {
+            var requestDTO = new TarefaRequestDTO(TITULO_INICIAL, DESCRICAO_INICIAL);
+            var tarefaEntity = new Tarefa(TITULO_INICIAL, DESCRICAO_INICIAL);
+
+            when(tarefaMapper.toEntity(requestDTO)).thenReturn(tarefaEntity);
+            when(tarefaRepository.save(any(Tarefa.class))).thenThrow(new RuntimeException("Erro de conexão"));
+
+            assertThrows(RuntimeException.class, () -> tarefaService.criarTarefa(requestDTO));
+
+            verify(tarefaRepository).save(tarefaEntity);
         }
     }
     @Nested
@@ -132,6 +145,21 @@ public class TarefaServiceTest {
 
             assertThrows(TarefaException.class, () -> tarefaService.listarTarefas(null, pageable));
 
+            verify(tarefaRepository).findAll(pageable);
+        }
+
+        @Test
+        @DisplayName("Deve retornar página vazia quando não houver tarefas")
+        void deveRetornarPaginaVazia() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Tarefa> pageVazia = new PageImpl<>(List.of(), pageable, 0);
+
+            when(tarefaRepository.findAll(pageable)).thenReturn(pageVazia);
+
+            PageResponseDTO<TarefaResponseDTO> resultado = tarefaService.listarTarefas(null, pageable);
+
+            assertTrue(resultado.conteudo().isEmpty());
+            assertEquals(0, resultado.totalElementos());
             verify(tarefaRepository).findAll(pageable);
         }
     }
@@ -227,6 +255,33 @@ public class TarefaServiceTest {
 
             assertEquals(StatusTarefa.CONCLUIDA, tarefaExistente.getStatusTarefa());
             assertNotNull(tarefaExistente.getDataConclusao());
+        }
+
+        @Test
+        @DisplayName("Deve atualizar todos os campos com sucesso")
+        void deveAtualizarTodosOsCamposComSucesso() {
+            var updateDTO = new TarefaUpdateRequestDTO(TITULO_ATUALIZADO, DESCRICAO_ATUALIZADA, StatusTarefa.CONCLUIDA);
+            var tarefaExistente = new Tarefa(TITULO_ANTIGO, DESCRICAO_ANTIGA);
+
+            when(tarefaRepository.findById(ID_01)).thenReturn(Optional.of(tarefaExistente));
+            when(tarefaMapper.toDto(any())).thenReturn(new TarefaResponseDTO(ID_01, TITULO_ATUALIZADO, DESCRICAO_ATUALIZADA, StatusTarefa.CONCLUIDA, LocalDateTime.now()));
+
+            var resultado = tarefaService.atualizarDadosTarefa(ID_01, updateDTO);
+
+            assertEquals(TITULO_ATUALIZADO, resultado.titulo());
+            assertEquals(StatusTarefa.CONCLUIDA, tarefaExistente.getStatusTarefa());
+            assertNotNull(tarefaExistente.getDataConclusao());
+        }
+
+        @Test
+        @DisplayName("Deve lançar exceção ao tentar atualizar tarefa inexistente")
+        void deveLancarExcecaoAoAtualizarTarefaInexistente() {
+            var updateDTO = new TarefaUpdateRequestDTO(TITULO_ATUALIZADO, null, null);
+            when(tarefaRepository.findById(ID_INEXISTENTE)).thenReturn(Optional.empty());
+
+            assertThrows(TarefaException.class, () -> tarefaService.atualizarDadosTarefa(ID_INEXISTENTE, updateDTO));
+            verify(tarefaRepository).findById(ID_INEXISTENTE);
+            verify(tarefaMapper, never()).toDto(any());
         }
     }
     @Nested

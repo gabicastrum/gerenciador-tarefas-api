@@ -11,23 +11,25 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Tarefa {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter
     private Long id;
 
     @NotBlank
     @Column(nullable = false)
+    @Setter
     private String titulo;
 
+    @Setter
     private String descricao;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Setter
     private StatusTarefa statusTarefa;
 
     @Column(nullable = false)

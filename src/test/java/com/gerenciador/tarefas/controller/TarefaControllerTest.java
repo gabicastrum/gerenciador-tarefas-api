@@ -31,6 +31,8 @@ class TarefaControllerTest {
     private static final String DESCRICAO_PADRAO = "Descrição da tarefa";
     private static final String TITULO_ATUALIZADO = "Tarefa atualizada";
     private static final Long ID_INEXISTENTE = 999L;
+    private static final String TITULO_ORIGINAL = "Título Original";
+    private static final String DESCRICAO_NOVA = "Descrição Nova";
 
     @Autowired
     private MockMvc mockMvc;
@@ -104,6 +106,47 @@ class TarefaControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.conteudo").isArray());
         }
+
+        @Test
+        @DisplayName("Deve retornar estrutura de página mesmo quando não houver tarefas")
+        void deveRetornarEstruturaVaziaComSucesso() throws Exception {
+            mockMvc.perform(get(URL_TAREFAS))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.conteudo").isEmpty())
+                    .andExpect(jsonPath("$.totalElementos").value(0));
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 ao filtrar por status inexistente")
+        void deveRetornarErroParaStatusInexistente() throws Exception {
+            mockMvc.perform(get(URL_TAREFAS)
+                            .param("status", "STATUS_QUE_NAO_EXISTE"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 quando o status da tarefa for inválido")
+        void deveRetornar400QuandoStatusInvalido() throws Exception {
+            String jsonInvalido = "{\"statusTarefa\": \"INVALIDO\"}";
+
+            mockMvc.perform(patch(URL_TAREFAS + "/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonInvalido))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Valores aceitos: [PENDENTE, CONCLUIDA]")));
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 quando JSON tem erro de sintaxe")
+        void deveRetornar400QuandoErroSintaxeJson() throws Exception {
+            String jsonComErroSintaxe = "{ \"titulo\" : : \"Erro\" }";
+
+            mockMvc.perform(post(URL_TAREFAS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonComErroSintaxe))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Valor inválido no corpo da requisição."));
+        }
     }
 
     @Nested
@@ -168,6 +211,25 @@ class TarefaControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(update)))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Deve atualizar apenas a descrição e manter o título original")
+        void deveAtualizarApenasDescricao() throws Exception {
+            String response = mockMvc.perform(post(URL_TAREFAS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(new TarefaRequestDTO(TITULO_ORIGINAL, DESCRICAO_PADRAO))))
+                    .andReturn().getResponse().getContentAsString();
+            long id = objectMapper.readTree(response).get("id").asLong();
+
+            TarefaUpdateRequestDTO update = new TarefaUpdateRequestDTO(null, DESCRICAO_NOVA, null);
+
+            mockMvc.perform(patch(URL_TAREFAS + "/" + id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(update)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.titulo").value(TITULO_ORIGINAL))
+                    .andExpect(jsonPath("$.descricao").value(DESCRICAO_NOVA));
         }
     }
 
